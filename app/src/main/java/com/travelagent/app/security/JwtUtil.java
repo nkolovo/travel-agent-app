@@ -1,14 +1,18 @@
 package com.travelagent.app.security;
 
 import io.jsonwebtoken.*;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private String secret = "your_jwt_secret_key";
-    private long expirationMs = 86400000;
+    @Value("${app.jwtSecret}")
+    private String secret;
+    @Value("${app.jwtExpirationMs}")
+    private long expirationMs; // 60000 = 1 minute
 
     public String generateToken(String username) {
         return Jwts.builder()

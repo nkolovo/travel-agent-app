@@ -4,14 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "Destination")
 public class Destination {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,6 +19,6 @@ public class Destination {
     private LocalDate endDate;
 
     @ManyToOne
-    @JoinColumn(name="itinerary_id")
+    @JoinColumn(name = "itinerary_id")
     private Itinerary itinerary;
 }
