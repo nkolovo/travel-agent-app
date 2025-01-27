@@ -5,6 +5,8 @@ import com.travelagent.app.models.Role;
 import com.travelagent.app.services.RoleService;
 import com.travelagent.app.services.UserService;
 import com.travelagent.app.security.JwtUtil;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -78,5 +80,13 @@ public class AuthController {
             "role", roleName,
             "username", dbUser.getUsername()
             );
+    }
+
+     @PostMapping("/logout")
+    public ResponseEntity<?> logout() {
+        // JWT doesn't require any server-side token invalidation since it's stateless.
+        // Just return a success message to the client indicating a successful logout.
+        // Handle the logout from the client.
+        return ResponseEntity.ok().body("Logged out successfully.");
     }
 }
