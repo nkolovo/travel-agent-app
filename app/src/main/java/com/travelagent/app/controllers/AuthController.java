@@ -3,7 +3,7 @@ package com.travelagent.app.controllers;
 import com.travelagent.app.models.User;
 import com.travelagent.app.models.Role;
 import com.travelagent.app.services.RoleService;
-import com.travelagent.app.repositories.UserRepository;
+import com.travelagent.app.services.UserService;
 import com.travelagent.app.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -14,13 +14,13 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final RoleService roleService;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository userRepository, RoleService roleService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
+    public AuthController(UserService userService, RoleService roleService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
         this.roleService = roleService;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
@@ -39,17 +39,32 @@ public class AuthController {
         // Set role field for user creation
         Role role = roleService.findByName("AGENT");
         user.setRole(role);
-        userRepository.save(user);
+        userService.saveUser(user);
         
         return "User registered successfully!";
+    }
+
+    @PostMapping("/update")
+    public String update(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+        User user = userService.getUserByUsername(username);
+        user.setPassword(password);
+        userService.saveUser(user);
+        return "User password updated successfully!";
+    }
+
+    @PostMapping("/delete")
+    public String delete(@RequestBody String username) {
+        userService.deleteUser(username);
+        return "User deleted.";
     }
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody Map<String, String> request) {
         String username = request.get("username");
         String password = request.get("password");
-        User dbUser = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User dbUser = userService.getUserByUsername(username);
         
         if (!passwordEncoder.matches(password, dbUser.getPassword())) {
             throw new RuntimeException("Invalid password");
