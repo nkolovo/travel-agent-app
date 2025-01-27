@@ -17,8 +17,8 @@ public class ItineraryController {
     }
 
     @GetMapping
-    public List<Itinerary> getAllItinerarys() {
-        return itineraryService.getAllItinerarys();
+    public List<Itinerary> getAllItineraries() {
+        return itineraryService.getAllItineraries();
     }
 
     @GetMapping("/{id}")

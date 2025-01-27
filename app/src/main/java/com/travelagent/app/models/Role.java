@@ -1,6 +1,9 @@
 package com.travelagent.app.models;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,6 +18,7 @@ public class Role {
 
     private String name;
     
-    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL)
-    private List<User> users;
+    @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<User> users = new ArrayList<>();
 }

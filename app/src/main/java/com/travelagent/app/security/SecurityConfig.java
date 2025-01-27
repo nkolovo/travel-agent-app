@@ -1,5 +1,6 @@
 package com.travelagent.app.security;
 
+import com.travelagent.app.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,10 +15,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JwtUtil jwtUtil;
+    private final UserRepository userRepository;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    public SecurityConfig(JwtUtil jwtUtil, UserRepository userRepository) {
+        this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -35,14 +38,14 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Public auth endpoints
-                .requestMatchers("/api/admin/**").hasRole("ADMIN") // Admin-only endpoints
-                .requestMatchers("/api/clients/**").hasAnyRole("ADMIN", "AGENT") // Agents & Admins
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/users/**").hasAuthority("ADMIN")
+                .requestMatchers("/api/destinations/**", "/api/itineraries/**", "/api/clients/**").hasAnyAuthority("ADMIN", "AGENT")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        
+            .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, userRepository), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }

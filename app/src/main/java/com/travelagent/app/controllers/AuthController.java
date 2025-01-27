@@ -1,6 +1,8 @@
 package com.travelagent.app.controllers;
 
 import com.travelagent.app.models.User;
+import com.travelagent.app.models.Role;
+import com.travelagent.app.services.RoleService;
 import com.travelagent.app.repositories.UserRepository;
 import com.travelagent.app.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,33 +15,53 @@ import java.util.Map;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final RoleService roleService;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public AuthController(UserRepository userRepository, RoleService roleService, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.roleService = roleService;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
-    }
+    }    
 
     @PostMapping("/register")
-    public String register(@RequestBody User user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    public String register(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+
+        // Set user fields for creation
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode(password));
+        
+        // Set role field for user creation
+        Role role = roleService.findByName("AGENT");
+        user.setRole(role);
         userRepository.save(user);
+        
         return "User registered successfully!";
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody User user) {
-        User dbUser = userRepository.findByUsername(user.getUsername())
+    public Map<String, String> login(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+        User dbUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        System.out.println(!passwordEncoder.matches(user.getPassword(), dbUser.getPassword()));
-        if (passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) { // NEED TO ENCODE PASSWORDS IN DB FOR THIS TO WORK - TOKEN: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJua29sb3ZvcyIsImlhdCI6MTczNzc1Mzg5MCwiZXhwIjoxNzM3ODQwMjkwfQ.W4xKJWv3vHqVYWjdo8RSoA2Rf0ShXeaBqFsdXoKxKFY
+        if (!passwordEncoder.matches(password, dbUser.getPassword())) {
             throw new RuntimeException("Invalid password");
         }
 
-        String token = jwtUtil.generateToken(dbUser.getUsername());
-        return Map.of("token", token);
+        System.out.println(dbUser.getRole().getName());
+        String token = jwtUtil.generateToken(dbUser.getUsername(), dbUser.getRole());
+        String roleName = dbUser.getRole().getName();
+        return Map.of(
+            "token", token,
+            "role", roleName,
+            "username", dbUser.getUsername()
+            );
     }
 }
