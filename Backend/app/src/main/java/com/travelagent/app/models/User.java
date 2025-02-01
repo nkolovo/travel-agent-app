@@ -28,6 +28,9 @@ public class User implements UserDetails {
     @JsonBackReference
     private Role role;
 
+    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL)
+    private List<Itinerary> itineraries;
+
     @Override
     public List<GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(role.getName()));

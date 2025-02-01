@@ -3,6 +3,7 @@ package com.travelagent.app.security;
 import com.travelagent.app.repositories.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,9 +39,10 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+            .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/users/**").hasAuthority("ADMIN")
-                .requestMatchers("/api/destinations/**", "/api/itineraries/**", "/api/clients/**").hasAnyAuthority("ADMIN", "AGENT")
+                .requestMatchers("/api/clients/**", "/api/itineraries/**", "/api/dates/**", "api/items/**").hasAnyAuthority("ADMIN", "AGENT")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
