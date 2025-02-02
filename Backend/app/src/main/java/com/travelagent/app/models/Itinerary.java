@@ -6,6 +6,13 @@ import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+
 @Entity
 @Data
 @Table(name = "Itinerary")
@@ -16,22 +23,33 @@ public class Itinerary {
     private Long id;
 
     private String name;
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate createdDate;
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateSold;
     private String reservationNumber;
     private String leadName;
     private int numTravelers;
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate arrivalDate;
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate departureDate;
     private int tripPrice;
     private String status;
     private boolean docsSent;
 
-    @Lob
-    @Column(name = "image", columnDefinition = "BYTEA")
+    @Column(name = "image", columnDefinition = "BYTEA", nullable = true)
     private byte[] image;
 
-    private String imageType; // Stores MIME type (e.g., image/png, image/jpeg)
+    private String imageType;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -41,7 +59,8 @@ public class Itinerary {
     @JoinColumn(name = "client_id")
     private Client client;
 
-    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "itinerary", cascade = CascadeType.ALL)
+    @JsonIgnoreProperties("itinerary") // Ignore back reference
     private List<Date> dates;
 
     public Itinerary() {

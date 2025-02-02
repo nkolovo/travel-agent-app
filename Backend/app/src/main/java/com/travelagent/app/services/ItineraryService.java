@@ -27,6 +27,10 @@ public class ItineraryService {
         return itineraryRepository.findById(id).orElseThrow(() -> new RuntimeException("Itinerary not found"));
     }
 
+    public String getLatestReservationNumber() {
+        return itineraryRepository.findNewestReservationNumber();
+    }
+
     public Itinerary saveItinerary(Itinerary itinerary) {
         return itineraryRepository.save(itinerary);
     }

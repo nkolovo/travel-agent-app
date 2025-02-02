@@ -1,8 +1,10 @@
 package com.travelagent.app.controllers;
 
+import com.travelagent.app.models.Client;
 import com.travelagent.app.models.Date;
 import com.travelagent.app.models.Itinerary;
-import com.travelagent.app.services.DateService;
+
+import com.travelagent.app.services.ClientService;
 import com.travelagent.app.services.ItineraryService;
 
 import org.springframework.http.HttpHeaders;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -19,9 +23,11 @@ import java.util.List;
 public class ItineraryController {
 
     private final ItineraryService itineraryService;
+    private final ClientService clientService;
 
-    public ItineraryController(ItineraryService itineraryService, DateService dateService) {
+    public ItineraryController(ItineraryService itineraryService, ClientService clientService) {
         this.itineraryService = itineraryService;
+        this.clientService = clientService;
     }
 
     @GetMapping
@@ -35,14 +41,50 @@ public class ItineraryController {
     }
 
     @PostMapping("/create")
-    public String createItinerary(@RequestBody Itinerary itinerary) {
-        itineraryService.saveItinerary(itinerary);
-        return "Itinerary created successfully.";
+    public ResponseEntity<String> createItinerary(@RequestBody Itinerary itinerary) {
+        try {
+            System.out.println("Reached create api");
+
+            // Handle the client creation if not already existing
+            if (itinerary.getClient() != null && itinerary.getClient().getId() == null) {
+                Client newClient = itinerary.getClient();
+                Client savedClient = clientService.saveClient(newClient);
+                itinerary.setClient(savedClient);
+            }
+
+            // Ensure that the dates list is initialized if not provided
+            if (itinerary.getDates() == null) {
+                itinerary.setDates(new ArrayList<>());
+            }
+
+            // If image is not provided, make sure it is set to null
+            if (itinerary.getImage() != null && itinerary.getImage().length > 0) {
+                byte[] decodedImage = Base64.getDecoder().decode(itinerary.getImage());
+                itinerary.setImage(decodedImage);
+            } else {
+                itinerary.setImage(null); // Set image to null if not provided
+            }
+
+            // Save the itinerary to the database
+            itineraryService.saveItinerary(itinerary);
+
+            return ResponseEntity.ok("Itinerary created successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error creating itinerary: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
     public void deleteItinerary(@PathVariable Long id) {
         itineraryService.deleteItinerary(id);
+    }
+
+    @GetMapping("latest-reservation")
+    public String getLatestReservation() {
+        String lastReservation = itineraryService.getLatestReservationNumber();
+        int lastNumber = Integer.parseInt(lastReservation.replaceAll("^PG", ""));
+        int newNumber = lastNumber + 1;
+        return String.format("PG%06d", newNumber);
     }
 
     @PostMapping("/update/name/{id}")

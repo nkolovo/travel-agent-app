@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "items")
 public class Item {
@@ -16,7 +18,8 @@ public class Item {
     private String name;
     private String description;
 
-    @ManyToMany(mappedBy = "items") // Bidirectional Relationship
+    @ManyToMany(mappedBy = "items")
+    @JsonIgnoreProperties("items") // Prevent cycles
     private Set<Date> dates = new HashSet<>();
 
     // Constructors

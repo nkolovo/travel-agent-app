@@ -4,8 +4,14 @@ import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 @Entity
 @Table(name = "dates")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Date {
 
     @Id
@@ -18,6 +24,7 @@ public class Date {
 
     @ManyToOne
     @JoinColumn(name = "itinerary_id")
+    @JsonBackReference("date-itinerary")
     private Itinerary itinerary;
 
     @ManyToMany
@@ -25,6 +32,7 @@ public class Date {
             joinColumns = @JoinColumn(name = "date_id"), // Foreign key for Date
             inverseJoinColumns = @JoinColumn(name = "item_id") // Foreign key for Item
     )
+    @JsonIgnoreProperties("dates") // Prevent loops with Items
     private Set<Item> items = new HashSet<>(); // Many-to-Many relationship
 
     // Constructors
